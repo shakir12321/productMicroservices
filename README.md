@@ -5,15 +5,17 @@ This project demonstrates a microservices architecture using Spring Boot with tw
 ## Architecture Overview
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│  Product Service│    │   Order Service │
-│   (Port: 8081)  │    │   (Port: 8082)  │
-└─────────────────┘    └─────────────────┘
-         │                       │
-         │                       │
-         └───────────────────────┘
-                    │
-              REST API Calls
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────┐    ┌─────────────────┐
+│  Product Service│    │   Order Service │    │ Benefit Estimation  │    │  Payout Service │
+│   (Port: 8081)  │    │   (Port: 8082)  │    │   Service (8083)    │    │   (Port: 8084)  │
+└─────────────────┘    └─────────────────┘    └─────────────────────┘    └─────────────────┘
+         │                       │                       │                       │
+         │                       │                       │                       │
+         └───────────────────────┼───────────────────────┼───────────────────────┘
+                                 │                       │
+                                 └───────────────────────┘
+                                                    │
+                                            REST API Calls
 ```
 
 ## Services
@@ -35,6 +37,24 @@ This project demonstrates a microservices architecture using Spring Boot with tw
   - Integration with Product Service
   - Stock reservation during order creation
   - Order status tracking
+
+### Benefit Estimation Service
+- **Port**: 8083
+- **Database**: H2 (in-memory)
+- **Features**:
+  - Benefit calculation based on order details
+  - Multiple benefit types (cashback, loyalty points, etc.)
+  - Integration with Order Service
+  - Benefit estimation status tracking
+
+### Payout Service
+- **Port**: 8084
+- **Database**: H2 (in-memory)
+- **Features**:
+  - Payout processing and management
+  - Multiple payout methods (bank transfer, PayPal, etc.)
+  - Integration with Benefit Estimation Service
+  - Payout status tracking and transaction management
 
 ## Technology Stack
 
@@ -116,6 +136,38 @@ This project demonstrates a microservices architecture using Spring Boot with tw
 - `GET /api/orders/status/{status}` - Get orders by status
 - `GET /api/orders/search?customerName={name}` - Search orders by customer name
 
+### Benefit Estimation Service (http://localhost:8083)
+
+#### Benefit Estimations
+- `GET /api/benefit-estimations` - Get all benefit estimations
+- `GET /api/benefit-estimations/{id}` - Get benefit estimation by ID
+- `POST /api/benefit-estimations` - Create a new benefit estimation
+- `PUT /api/benefit-estimations/{id}/status?status={status}` - Update estimation status
+- `DELETE /api/benefit-estimations/{id}` - Delete a benefit estimation
+
+#### Benefit Estimation Search & Filtering
+- `GET /api/benefit-estimations/customer/{customerId}` - Get estimations by customer ID
+- `GET /api/benefit-estimations/order/{orderId}` - Get estimations by order ID
+- `GET /api/benefit-estimations/benefit-type/{benefitType}` - Get estimations by benefit type
+- `GET /api/benefit-estimations/status/{status}` - Get estimations by status
+
+### Payout Service (http://localhost:8084)
+
+#### Payouts
+- `GET /api/payouts` - Get all payouts
+- `GET /api/payouts/{id}` - Get payout by ID
+- `POST /api/payouts` - Create a new payout
+- `POST /api/payouts/{id}/process` - Process a payout
+- `PUT /api/payouts/{id}/status?status={status}` - Update payout status
+- `DELETE /api/payouts/{id}` - Delete a payout
+
+#### Payout Search & Filtering
+- `GET /api/payouts/customer/{customerId}` - Get payouts by customer ID
+- `GET /api/payouts/order/{orderId}` - Get payouts by order ID
+- `GET /api/payouts/benefit-estimation/{benefitEstimationId}` - Get payouts by benefit estimation ID
+- `GET /api/payouts/method/{payoutMethod}` - Get payouts by payout method
+- `GET /api/payouts/status/{status}` - Get payouts by status
+
 ## Database Access
 
 ### H2 Console
@@ -126,6 +178,16 @@ This project demonstrates a microservices architecture using Spring Boot with tw
 
 - **Order Service**: http://localhost:8082/h2-console
   - JDBC URL: `jdbc:h2:mem:orderdb`
+  - Username: `sa`
+  - Password: `password`
+
+- **Benefit Estimation Service**: http://localhost:8083/h2-console
+  - JDBC URL: `jdbc:h2:mem:benefitdb`
+  - Username: `sa`
+  - Password: `password`
+
+- **Payout Service**: http://localhost:8084/h2-console
+  - JDBC URL: `jdbc:h2:mem:payoutdb`
   - Username: `sa`
   - Password: `password`
 
@@ -161,12 +223,44 @@ curl -X POST http://localhost:8082/api/orders \
   }'
 ```
 
+### Creating a Benefit Estimation
+```bash
+curl -X POST http://localhost:8083/api/benefit-estimations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orderId": 1,
+    "customerId": "john@example.com",
+    "preferredBenefitType": "CASHBACK"
+  }'
+```
+
+### Creating a Payout
+```bash
+curl -X POST http://localhost:8084/api/payouts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "benefitEstimationId": 1,
+    "payoutMethod": "BANK_TRANSFER",
+    "additionalDetails": "Account: 1234567890"
+  }'
+```
+
 ## Service Communication
 
-The Order Service communicates with the Product Service using:
+### Order Service → Product Service
 - **WebClient**: Reactive HTTP client for non-blocking calls
 - **REST APIs**: Standard HTTP endpoints
 - **Stock Reservation**: Automatic stock reservation during order creation
+
+### Benefit Estimation Service → Order Service
+- **WebClient**: Reactive HTTP client for non-blocking calls
+- **Order Details**: Retrieves order information for benefit calculation
+- **Benefit Calculation**: Calculates benefits based on order total and type
+
+### Payout Service → Benefit Estimation Service
+- **WebClient**: Reactive HTTP client for non-blocking calls
+- **Benefit Validation**: Validates benefit estimation before payout processing
+- **Amount Retrieval**: Gets payout amount from benefit estimation
 
 ## Error Handling
 
@@ -191,6 +285,28 @@ Both services include comprehensive error handling:
 │   └── Dockerfile
 ├── order-service/
 │   ├── src/main/java/com/example/orderservice/
+│   │   ├── controller/
+│   │   ├── model/
+│   │   ├── repository/
+│   │   ├── service/
+│   │   ├── client/
+│   │   └── dto/
+│   ├── src/main/resources/
+│   ├── pom.xml
+│   └── Dockerfile
+├── benefit-estimation-service/
+│   ├── src/main/java/com/example/benefitestimationservice/
+│   │   ├── controller/
+│   │   ├── model/
+│   │   ├── repository/
+│   │   ├── service/
+│   │   ├── client/
+│   │   └── dto/
+│   ├── src/main/resources/
+│   ├── pom.xml
+│   └── Dockerfile
+├── payout-service/
+│   ├── src/main/java/com/example/payoutservice/
 │   │   ├── controller/
 │   │   ├── model/
 │   │   ├── repository/

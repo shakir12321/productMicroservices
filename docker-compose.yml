@@ -22,6 +22,34 @@ services:
     networks:
       - microservices-network
 
+  benefit-estimation-service:
+    build: ./benefit-estimation-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - ORDER_SERVICE_URL=http://order-service:8082/api/orders
+      - PRODUCT_SERVICE_URL=http://product-service:8081/api/products
+    depends_on:
+      - order-service
+      - product-service
+    networks:
+      - microservices-network
+
+  payout-service:
+    build: ./payout-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - BENEFIT_ESTIMATION_SERVICE_URL=http://benefit-estimation-service:8083/api/benefit-estimations
+      - ORDER_SERVICE_URL=http://order-service:8082/api/orders
+    depends_on:
+      - benefit-estimation-service
+      - order-service
+    networks:
+      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge
