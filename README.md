@@ -1,344 +1,357 @@
-# Microservices Project - Product and Order Services
+# 🚀 Microservices E-Commerce Platform
 
-This project demonstrates a microservices architecture using Spring Boot with two main services: Product Service and Order Service.
+A comprehensive e-commerce platform built with Spring Boot microservices and a Next.js frontend, featuring product management, order processing, benefit estimation, and payout services.
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────┐    ┌─────────────────┐
-│  Product Service│    │   Order Service │    │ Benefit Estimation  │    │  Payout Service │
-│   (Port: 8081)  │    │   (Port: 8082)  │    │   Service (8083)    │    │   (Port: 8084)  │
-└─────────────────┘    └─────────────────┘    └─────────────────────┘    └─────────────────┘
-         │                       │                       │                       │
-         │                       │                       │                       │
-         └───────────────────────┼───────────────────────┼───────────────────────┘
-                                 │                       │
-                                 └───────────────────────┘
-                                                    │
-                                            REST API Calls
+┌─────────────────────────────────────────────────────────────┐
+│                    Next.js Frontend                         │
+│                    (Port 3000)                              │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
+│                    Microservices                            │
+├─────────────────────────────────────────────────────────────┤
+│  Product Service    │  Order Service    │  Benefit Service  │
+│  (Port 8081)       │  (Port 8082)      │  (Port 8083)      │
+└─────────────────────┼───────────────────┼───────────────────┘
+                      │                   │
+┌─────────────────────▼───────────────────▼───────────────────┐
+│                    Payout Service                           │
+│                    (Port 8084)                              │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
+│                    Data Layer                               │
+├─────────────────────────────────────────────────────────────┤
+│  MySQL Database     │  Redis Cache                          │
+│  (Port 3306)       │  (Port 6379)                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Services
+## 🛠️ Technology Stack
 
-### Product Service
-- **Port**: 8081
-- **Database**: H2 (in-memory)
+### Backend (Spring Boot Microservices)
+
+- **Java 17** - Modern Java with LTS support
+- **Spring Boot 3.2.0** - Rapid application development
+- **Spring Data JPA** - Data access layer
+- **Spring WebFlux** - Reactive HTTP client
+- **MySQL 8.0** - Primary database
+- **Redis 7** - Caching layer
+- **Docker** - Containerization
+
+### Frontend (Next.js)
+
+- **Next.js 14** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first CSS
+- **React Query** - Data fetching and caching
+- **Axios** - HTTP client
+- **Lucide React** - Icon library
+
+## 📦 Services
+
+### 1. Product Service (Port 8081)
+
+- **Purpose**: Product catalog management
 - **Features**:
-  - Product CRUD operations
+  - CRUD operations for products
   - Stock management
-  - Product search and filtering
-  - Category-based product listing
+  - Category-based filtering
+  - Search functionality
+  - Redis caching for performance
 
-### Order Service
-- **Port**: 8082
-- **Database**: H2 (in-memory)
+### 2. Order Service (Port 8082)
+
+- **Purpose**: Order processing and management
 - **Features**:
-  - Order creation and management
-  - Integration with Product Service
-  - Stock reservation during order creation
+  - Create and manage orders
   - Order status tracking
+  - Integration with Product Service for stock validation
+  - Customer information management
 
-### Benefit Estimation Service
-- **Port**: 8083
-- **Database**: H2 (in-memory)
-- **Features**:
-  - Benefit calculation based on order details
-  - Multiple benefit types (cashback, loyalty points, etc.)
-  - Integration with Order Service
-  - Benefit estimation status tracking
+### 3. Benefit Estimation Service (Port 8083)
 
-### Payout Service
-- **Port**: 8084
-- **Database**: H2 (in-memory)
+- **Purpose**: Calculate customer benefits and loyalty rewards
 - **Features**:
-  - Payout processing and management
-  - Multiple payout methods (bank transfer, PayPal, etc.)
+  - Loyalty points calculation
+  - Cashback estimation
+  - Discount calculations
+  - Free shipping eligibility
+
+### 4. Payout Service (Port 8084)
+
+- **Purpose**: Process payouts and manage payment methods
+- **Features**:
+  - Payout processing
+  - Multiple payment methods (Bank Transfer, Credit Card, Digital Wallet)
+  - Payout status tracking
   - Integration with Benefit Estimation Service
-  - Payout status tracking and transaction management
 
-## Technology Stack
+### 5. Frontend Application (Port 3000)
 
-- **Spring Boot**: 3.2.0
-- **Java**: 17
-- **Spring Data JPA**: For database operations
-- **H2 Database**: In-memory database for development
-- **Spring WebFlux**: For reactive HTTP client
-- **Maven**: Build tool
-- **Docker**: Containerization
+- **Purpose**: User interface for all services
+- **Features**:
+  - Modern, responsive dashboard
+  - Real-time data management
+  - Interactive forms and modals
+  - Service integration
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Java 17 or higher
-- Maven 3.6 or higher
-- Docker and Docker Compose (optional)
+- Docker and Docker Compose
+- Node.js 18+ (for local frontend development)
+- Java 17+ (for local backend development)
 
-### Running Locally
+### 1. Clone the Repository
 
-1. **Build the Product Service**:
-   ```bash
-   cd product-service
-   mvn clean package
-   java -jar target/product-service-1.0.0.jar
-   ```
-
-2. **Build the Order Service**:
-   ```bash
-   cd order-service
-   mvn clean package
-   java -jar target/order-service-1.0.0.jar
-   ```
-
-### Running with Docker
-
-1. **Build and run both services**:
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Stop the services**:
-   ```bash
-   docker-compose down
-   ```
-
-## API Endpoints
-
-### Product Service (http://localhost:8081)
-
-#### Products
-- `GET /api/products` - Get all products
-- `GET /api/products/{id}` - Get product by ID
-- `POST /api/products` - Create a new product
-- `PUT /api/products/{id}` - Update a product
-- `DELETE /api/products/{id}` - Delete a product
-
-#### Product Search & Filtering
-- `GET /api/products/category/{category}` - Get products by category
-- `GET /api/products/search?name={name}` - Search products by name
-- `GET /api/products/in-stock` - Get products with stock > 0
-
-#### Stock Management
-- `PATCH /api/products/{id}/stock?quantity={quantity}` - Update stock quantity
-- `POST /api/products/{id}/reserve?quantity={quantity}` - Reserve stock
-
-### Order Service (http://localhost:8082)
-
-#### Orders
-- `GET /api/orders` - Get all orders
-- `GET /api/orders/{id}` - Get order by ID
-- `POST /api/orders` - Create a new order
-- `PUT /api/orders/{id}/status?status={status}` - Update order status
-- `DELETE /api/orders/{id}` - Delete an order
-
-#### Order Search & Filtering
-- `GET /api/orders/customer/{email}` - Get orders by customer email
-- `GET /api/orders/status/{status}` - Get orders by status
-- `GET /api/orders/search?customerName={name}` - Search orders by customer name
-
-### Benefit Estimation Service (http://localhost:8083)
-
-#### Benefit Estimations
-- `GET /api/benefit-estimations` - Get all benefit estimations
-- `GET /api/benefit-estimations/{id}` - Get benefit estimation by ID
-- `POST /api/benefit-estimations` - Create a new benefit estimation
-- `PUT /api/benefit-estimations/{id}/status?status={status}` - Update estimation status
-- `DELETE /api/benefit-estimations/{id}` - Delete a benefit estimation
-
-#### Benefit Estimation Search & Filtering
-- `GET /api/benefit-estimations/customer/{customerId}` - Get estimations by customer ID
-- `GET /api/benefit-estimations/order/{orderId}` - Get estimations by order ID
-- `GET /api/benefit-estimations/benefit-type/{benefitType}` - Get estimations by benefit type
-- `GET /api/benefit-estimations/status/{status}` - Get estimations by status
-
-### Payout Service (http://localhost:8084)
-
-#### Payouts
-- `GET /api/payouts` - Get all payouts
-- `GET /api/payouts/{id}` - Get payout by ID
-- `POST /api/payouts` - Create a new payout
-- `POST /api/payouts/{id}/process` - Process a payout
-- `PUT /api/payouts/{id}/status?status={status}` - Update payout status
-- `DELETE /api/payouts/{id}` - Delete a payout
-
-#### Payout Search & Filtering
-- `GET /api/payouts/customer/{customerId}` - Get payouts by customer ID
-- `GET /api/payouts/order/{orderId}` - Get payouts by order ID
-- `GET /api/payouts/benefit-estimation/{benefitEstimationId}` - Get payouts by benefit estimation ID
-- `GET /api/payouts/method/{payoutMethod}` - Get payouts by payout method
-- `GET /api/payouts/status/{status}` - Get payouts by status
-
-## Database Access
-
-### H2 Console
-- **Product Service**: http://localhost:8081/h2-console
-  - JDBC URL: `jdbc:h2:mem:productdb`
-  - Username: `sa`
-  - Password: `password`
-
-- **Order Service**: http://localhost:8082/h2-console
-  - JDBC URL: `jdbc:h2:mem:orderdb`
-  - Username: `sa`
-  - Password: `password`
-
-- **Benefit Estimation Service**: http://localhost:8083/h2-console
-  - JDBC URL: `jdbc:h2:mem:benefitdb`
-  - Username: `sa`
-  - Password: `password`
-
-- **Payout Service**: http://localhost:8084/h2-console
-  - JDBC URL: `jdbc:h2:mem:payoutdb`
-  - Username: `sa`
-  - Password: `password`
-
-## Sample Data
-
-### Creating a Product
 ```bash
+git clone <repository-url>
+cd springboot
+```
+
+### 2. Start All Services
+
+```bash
+# Start all services with Docker Compose
+docker compose up --build
+
+# Or start in background
+docker compose up -d --build
+```
+
+### 3. Access the Application
+
+- **Frontend Dashboard**: http://localhost:3000
+- **Product Service API**: http://localhost:8081/api/products
+- **Order Service API**: http://localhost:8082/api/orders
+- **Benefit Service API**: http://localhost:8083/api/benefit-estimations
+- **Payout Service API**: http://localhost:8084/api/payouts
+- **MySQL Database**: localhost:3306
+- **Redis Cache**: localhost:6379
+
+## 📋 API Endpoints
+
+### Product Service
+
+```http
+GET    /api/products              # Get all products
+GET    /api/products/{id}         # Get product by ID
+POST   /api/products              # Create new product
+PUT    /api/products/{id}         # Update product
+DELETE /api/products/{id}         # Delete product
+GET    /api/products/category/{category}  # Get products by category
+GET    /api/products/search?name={name}   # Search products
+GET    /api/products/in-stock     # Get products in stock
+PATCH  /api/products/{id}/stock?quantity={qty}  # Update stock
+POST   /api/products/{id}/reserve?quantity={qty} # Reserve stock
+```
+
+### Order Service
+
+```http
+GET    /api/orders                # Get all orders
+GET    /api/orders/{id}           # Get order by ID
+POST   /api/orders                # Create new order
+PUT    /api/orders/{id}           # Update order
+DELETE /api/orders/{id}           # Delete order
+GET    /api/orders/status/{status} # Get orders by status
+```
+
+### Benefit Estimation Service
+
+```http
+GET    /api/benefit-estimations                    # Get all estimations
+GET    /api/benefit-estimations/{id}               # Get estimation by ID
+POST   /api/benefit-estimations                    # Create new estimation
+GET    /api/benefit-estimations/order/{orderId}    # Get estimations by order
+GET    /api/benefit-estimations/status/{status}    # Get estimations by status
+```
+
+### Payout Service
+
+```http
+GET    /api/payouts                               # Get all payouts
+GET    /api/payouts/{id}                          # Get payout by ID
+POST   /api/payouts                               # Create new payout
+GET    /api/payouts/status/{status}               # Get payouts by status
+GET    /api/payouts/estimation/{estimationId}     # Get payouts by estimation
+```
+
+## 🗄️ Database Schema
+
+### MySQL Database (`microservices_db`)
+
+- **products** - Product catalog
+- **orders** - Order information
+- **order_items** - Order line items
+- **benefit_estimations** - Benefit calculations
+- **payouts** - Payout records
+
+### Redis Cache
+
+- **Product caching** - 30-minute TTL
+- **Session data** - Temporary storage
+- **Rate limiting** - API protection
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Database
+SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservices_db
+SPRING_DATASOURCE_USERNAME=microservices_user
+SPRING_DATASOURCE_PASSWORD=microservices_pass
+
+# Redis
+SPRING_REDIS_HOST=redis
+SPRING_REDIS_PORT=6379
+
+# Service URLs
+PRODUCT_SERVICE_URL=http://product-service:8081/api/products
+ORDER_SERVICE_URL=http://order-service:8082/api/orders
+BENEFIT_ESTIMATION_SERVICE_URL=http://benefit-estimation-service:8083/api/benefit-estimations
+PAYOUT_SERVICE_URL=http://payout-service:8084/api/payouts
+```
+
+## 🧪 Testing
+
+### API Testing with curl
+
+```bash
+# Test Product Service
+curl -X GET http://localhost:8081/api/products
 curl -X POST http://localhost:8081/api/products \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "iPhone 15",
-    "description": "Latest iPhone model",
-    "price": 999.99,
-    "stockQuantity": 50,
-    "category": "Electronics"
-  }'
-```
+  -d '{"name":"iPhone 15","price":999.99,"stockQuantity":50,"category":"Electronics"}'
 
-### Creating an Order
-```bash
+# Test Order Service
+curl -X GET http://localhost:8082/api/orders
 curl -X POST http://localhost:8082/api/orders \
   -H "Content-Type: application/json" \
-  -d '{
-    "customerName": "John Doe",
-    "customerEmail": "john@example.com",
-    "shippingAddress": "123 Main St, City, State",
-    "orderItems": [
-      {
-        "productId": 1,
-        "quantity": 2
-      }
-    ]
-  }'
+  -d '{"customerName":"John Doe","customerEmail":"john@example.com","items":[],"totalAmount":0,"status":"PENDING"}'
 ```
 
-### Creating a Benefit Estimation
+### Frontend Testing
+
+1. Open http://localhost:3000
+2. Navigate through different tabs
+3. Test CRUD operations for each service
+4. Verify real-time updates
+
+## 📊 Monitoring and Logs
+
+### View Service Logs
+
 ```bash
-curl -X POST http://localhost:8083/api/benefit-estimations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "orderId": 1,
-    "customerId": "john@example.com",
-    "preferredBenefitType": "CASHBACK"
-  }'
+# View all service logs
+docker compose logs
+
+# View specific service logs
+docker compose logs product-service
+docker compose logs frontend
+
+# Follow logs in real-time
+docker compose logs -f
 ```
 
-### Creating a Payout
+### Health Checks
+
 ```bash
-curl -X POST http://localhost:8084/api/payouts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "benefitEstimationId": 1,
-    "payoutMethod": "BANK_TRANSFER",
-    "additionalDetails": "Account: 1234567890"
-  }'
+# Check service health
+curl http://localhost:8081/actuator/health
+curl http://localhost:8082/actuator/health
+curl http://localhost:8083/actuator/health
+curl http://localhost:8084/actuator/health
 ```
 
-## Service Communication
+## 🚀 Deployment
 
-### Order Service → Product Service
-- **WebClient**: Reactive HTTP client for non-blocking calls
-- **REST APIs**: Standard HTTP endpoints
-- **Stock Reservation**: Automatic stock reservation during order creation
+### Production Deployment
 
-### Benefit Estimation Service → Order Service
-- **WebClient**: Reactive HTTP client for non-blocking calls
-- **Order Details**: Retrieves order information for benefit calculation
-- **Benefit Calculation**: Calculates benefits based on order total and type
+1. Update environment variables for production
+2. Configure external databases
+3. Set up reverse proxy (nginx)
+4. Configure SSL certificates
+5. Set up monitoring and logging
 
-### Payout Service → Benefit Estimation Service
-- **WebClient**: Reactive HTTP client for non-blocking calls
-- **Benefit Validation**: Validates benefit estimation before payout processing
-- **Amount Retrieval**: Gets payout amount from benefit estimation
+### Scaling
 
-## Error Handling
-
-Both services include comprehensive error handling:
-- **Validation**: Input validation using Bean Validation
-- **Business Logic**: Custom business rule validation
-- **HTTP Status Codes**: Appropriate status codes for different scenarios
-- **Exception Handling**: Centralized exception handling
-
-## Development
-
-### Project Structure
-```
-├── product-service/
-│   ├── src/main/java/com/example/productservice/
-│   │   ├── controller/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   └── service/
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   └── Dockerfile
-├── order-service/
-│   ├── src/main/java/com/example/orderservice/
-│   │   ├── controller/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   ├── service/
-│   │   ├── client/
-│   │   └── dto/
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   └── Dockerfile
-├── benefit-estimation-service/
-│   ├── src/main/java/com/example/benefitestimationservice/
-│   │   ├── controller/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   ├── service/
-│   │   ├── client/
-│   │   └── dto/
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   └── Dockerfile
-├── payout-service/
-│   ├── src/main/java/com/example/payoutservice/
-│   │   ├── controller/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   ├── service/
-│   │   ├── client/
-│   │   └── dto/
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   └── Dockerfile
-├── docker-compose.yml
-└── README.md
+```bash
+# Scale specific services
+docker compose up --scale product-service=3
+docker compose up --scale order-service=2
 ```
 
-### Adding New Features
+## 🔒 Security Considerations
 
-1. **Product Service**: Add new endpoints in `ProductController`
-2. **Order Service**: Add new endpoints in `OrderController`
-3. **Service Communication**: Update `ProductServiceClient` for new product service calls
-4. **Database**: Add new entities and repositories as needed
+- **Input Validation**: All inputs are validated using Bean Validation
+- **CORS Configuration**: Configured for frontend integration
+- **Database Security**: Separate user accounts for each service
+- **Redis Security**: Network isolation within Docker network
+- **API Security**: Consider adding authentication/authorization
 
-## Monitoring and Logging
+## 🤝 Contributing
 
-- **Application Logs**: Configured with DEBUG level for development
-- **H2 Console**: Web-based database management
-- **Health Checks**: Basic health endpoints available
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## Future Enhancements
+## 📝 License
 
-- **Service Discovery**: Implement Eureka or Consul
-- **API Gateway**: Add Zuul or Spring Cloud Gateway
-- **Circuit Breaker**: Implement resilience patterns
-- **Distributed Tracing**: Add Sleuth and Zipkin
-- **Message Queues**: Implement async communication with RabbitMQ/Kafka
-- **Security**: Add authentication and authorization
-- **Testing**: Comprehensive unit and integration tests
+This project is licensed under the MIT License.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Port Already in Use**
+
+   ```bash
+   # Check what's using the port
+   lsof -i :8081
+   # Kill the process or change port in docker-compose.yml
+   ```
+
+2. **Database Connection Issues**
+
+   ```bash
+   # Check if MySQL is running
+   docker compose ps mysql
+   # Check MySQL logs
+   docker compose logs mysql
+   ```
+
+3. **Frontend Not Loading**
+
+   ```bash
+   # Check if frontend is built correctly
+   docker compose logs frontend
+   # Rebuild frontend
+   docker compose build frontend
+   ```
+
+4. **Service Communication Issues**
+   ```bash
+   # Check network connectivity
+   docker network ls
+   docker network inspect springboot_microservices-network
+   ```
+
+### Performance Optimization
+
+1. **Enable Redis Caching**: Already configured
+2. **Database Indexing**: Add indexes for frequently queried fields
+3. **Connection Pooling**: Configured in application properties
+4. **Load Balancing**: Use nginx for multiple service instances
+
+---
+
+**Happy Coding! 🎉**

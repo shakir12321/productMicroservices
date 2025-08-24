@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce Microservices Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .nav {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .nav-tabs {
+        display: flex;
+        list-style: none;
+        gap: 10px;
+      }
+
+      .nav-tab {
+        padding: 10px 20px;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .nav-tab:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .nav-tab.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .card h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+
+      .btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease;
+      }
+
+      .btn:hover {
+        background: #5a6fd8;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .table th {
+        background: #f8f9fa;
+        font-weight: 600;
+      }
+
+      .status {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-processing {
+        background: #cce5ff;
+        color: #004085;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      .api-links {
+        background: #f8f9fa;
+        padding: 20px;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .api-links h4 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .api-links a {
+        display: inline-block;
+        margin: 5px 10px 5px 0;
+        padding: 8px 15px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: background 0.3s ease;
+      }
+
+      .api-links a:hover {
+        background: #5a6fd8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🛍️ E-Commerce Microservices Dashboard</h1>
+        <p>Manage Products, Orders, Benefits, and Payouts</p>
+      </div>
+
+      <div class="nav">
+        <ul class="nav-tabs">
+          <li class="nav-tab active" onclick="showSection('products')">
+            Products
+          </li>
+          <li class="nav-tab" onclick="showSection('orders')">Orders</li>
+          <li class="nav-tab" onclick="showSection('benefits')">Benefits</li>
+          <li class="nav-tab" onclick="showSection('payouts')">Payouts</li>
+        </ul>
+      </div>
+
+      <div class="content">
+        <!-- Products Section -->
+        <div id="products" class="section active">
+          <div class="card">
+            <h3>Add New Product</h3>
+            <form id="productForm">
+              <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="productName" required />
+              </div>
+              <div class="form-group">
+                <label>Description:</label>
+                <textarea id="productDescription" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Price:</label>
+                <input type="number" id="productPrice" step="0.01" required />
+              </div>
+              <div class="form-group">
+                <label>Category:</label>
+                <input type="text" id="productCategory" required />
+              </div>
+              <div class="form-group">
+                <label>Stock Quantity:</label>
+                <input type="number" id="productStock" required />
+              </div>
+              <button type="submit" class="btn">Add Product</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Products List</h3>
+            <button onclick="loadProducts()" class="btn">
+              Refresh Products
+            </button>
+            <div id="productsList"></div>
+          </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div id="orders" class="section">
+          <div class="card">
+            <h3>Create New Order</h3>
+            <form id="orderForm">
+              <div class="form-group">
+                <label>Customer Email:</label>
+                <input type="email" id="orderEmail" required />
+              </div>
+              <div class="form-group">
+                <label>Product ID:</label>
+                <input type="number" id="orderProductId" required />
+              </div>
+              <div class="form-group">
+                <label>Quantity:</label>
+                <input type="number" id="orderQuantity" required />
+              </div>
+              <button type="submit" class="btn">Create Order</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Orders List</h3>
+            <button onclick="loadOrders()" class="btn">Refresh Orders</button>
+            <div id="ordersList"></div>
+          </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div id="benefits" class="section">
+          <div class="card">
+            <h3>Create Benefit Estimation</h3>
+            <form id="benefitForm">
+              <div class="form-group">
+                <label>Order ID:</label>
+                <input type="number" id="benefitOrderId" required />
+              </div>
+              <div class="form-group">
+                <label>Benefit Type:</label>
+                <select id="benefitType" required>
+                  <option value="LOYALTY_POINTS">Loyalty Points</option>
+                  <option value="CASHBACK">Cashback</option>
+                  <option value="DISCOUNT">Discount</option>
+                  <option value="FREE_SHIPPING">Free Shipping</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Estimated Value:</label>
+                <input type="number" id="benefitValue" step="0.01" required />
+              </div>
+              <button type="submit" class="btn">
+                Create Benefit Estimation
+              </button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Benefits List</h3>
+            <button onclick="loadBenefits()" class="btn">
+              Refresh Benefits
+            </button>
+            <div id="benefitsList"></div>
+          </div>
+        </div>
+
+        <!-- Payouts Section -->
+        <div id="payouts" class="section">
+          <div class="card">
+            <h3>Create Payout</h3>
+            <form id="payoutForm">
+              <div class="form-group">
+                <label>Benefit Estimation ID:</label>
+                <input type="number" id="payoutEstimationId" required />
+              </div>
+              <div class="form-group">
+                <label>Customer ID:</label>
+                <input type="text" id="payoutCustomerId" required />
+              </div>
+              <div class="form-group">
+                <label>Amount:</label>
+                <input type="number" id="payoutAmount" step="0.01" required />
+              </div>
+              <div class="form-group">
+                <label>Payout Method:</label>
+                <select id="payoutMethod" required>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="PAYPAL">PayPal</option>
+                  <option value="CREDIT_CARD">Credit Card</option>
+                  <option value="DIGITAL_WALLET">Digital Wallet</option>
+                </select>
+              </div>
+              <button type="submit" class="btn">Create Payout</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Payouts List</h3>
+            <button onclick="loadPayouts()" class="btn">Refresh Payouts</button>
+            <div id="payoutsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="api-links">
+        <h4>🔗 API Documentation Links</h4>
+        <a href="http://localhost:8081/swagger-ui.html" target="_blank"
+          >Product Service API</a
+        >
+        <a href="http://localhost:8082/swagger-ui.html" target="_blank"
+          >Order Service API</a
+        >
+        <a href="http://localhost:8083/swagger-ui.html" target="_blank"
+          >Benefit Estimation API</a
+        >
+        <a href="http://localhost:8084/swagger-ui.html" target="_blank"
+          >Payout Service API</a
+        >
+      </div>
+    </div>
+
+    <script>
+      // Navigation
+      function showSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll(".section").forEach((section) => {
+          section.classList.remove("active");
+        });
+
+        // Remove active class from all tabs
+        document.querySelectorAll(".nav-tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        // Show selected section
+        document.getElementById(sectionName).classList.add("active");
+
+        // Add active class to clicked tab
+        event.target.classList.add("active");
+      }
+
+      // API Base URLs
+      const API_BASE = {
+        products: "http://localhost:8081/api/products",
+        orders: "http://localhost:8082/api/orders",
+        benefits: "http://localhost:8083/api/benefit-estimations",
+        payouts: "http://localhost:8084/api/payouts",
+      };
+
+      // Utility functions
+      function showMessage(elementId, message, type = "success") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="${type}">${message}</div>`;
+        setTimeout(() => {
+          element.innerHTML = "";
+        }, 5000);
+      }
+
+      function showLoading(elementId) {
+        document.getElementById(elementId).innerHTML =
+          '<div class="loading">Loading...</div>';
+      }
+
+      // Products
+      document
+        .getElementById("productForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const product = {
+            name: document.getElementById("productName").value,
+            description: document.getElementById("productDescription").value,
+            price: parseFloat(document.getElementById("productPrice").value),
+            category: document.getElementById("productCategory").value,
+            stockQuantity: parseInt(
+              document.getElementById("productStock").value
+            ),
+          };
+
+          try {
+            const response = await fetch(API_BASE.products, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(product),
+            });
+
+            if (response.ok) {
+              showMessage("productsList", "Product created successfully!");
+              document.getElementById("productForm").reset();
+              loadProducts();
+            } else {
+              showMessage("productsList", "Failed to create product", "error");
+            }
+          } catch (error) {
+            showMessage("productsList", "Error: " + error.message, "error");
+          }
+        });
+
+      async function loadProducts() {
+        showLoading("productsList");
+
+        try {
+          const response = await fetch(API_BASE.products);
+          const products = await response.json();
+
+          if (products.length === 0) {
+            document.getElementById("productsList").innerHTML =
+              "<p>No products found.</p>";
+            return;
+          }
+
+          const table = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products
+                              .map(
+                                (product) => `
+                                <tr>
+                                    <td>${product.id}</td>
+                                    <td>${product.name}</td>
+                                    <td>${product.description}</td>
+                                    <td>$${product.price}</td>
+                                    <td>${product.category}</td>
+                                    <td>${product.stockQuantity}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                `;
+
+          document.getElementById("productsList").innerHTML = table;
+        } catch (error) {
+          showMessage(
+            "productsList",
+            "Error loading products: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      // Orders
+      document
+        .getElementById("orderForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const order = {
+            customerEmail: document.getElementById("orderEmail").value,
+            items: [
+              {
+                productId: parseInt(
+                  document.getElementById("orderProductId").value
+                ),
+                quantity: parseInt(
+                  document.getElementById("orderQuantity").value
+                ),
+              },
+            ],
+          };
+
+          try {
+            const response = await fetch(API_BASE.orders, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(order),
+            });
+
+            if (response.ok) {
+              showMessage("ordersList", "Order created successfully!");
+              document.getElementById("orderForm").reset();
+              loadOrders();
+            } else {
+              showMessage("ordersList", "Failed to create order", "error");
+            }
+          } catch (error) {
+            showMessage("ordersList", "Error: " + error.message, "error");
+          }
+        });
+
+      async function loadOrders() {
+        showLoading("ordersList");
+
+        try {
+          const response = await fetch(API_BASE.orders);
+          const orders = await response.json();
+
+          if (orders.length === 0) {
+            document.getElementById("ordersList").innerHTML =
+              "<p>No orders found.</p>";
+            return;
+          }
+
+          const table = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer Email</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders
+                              .map(
+                                (order) => `
+                                <tr>
+                                    <td>${order.id}</td>
+                                    <td>${order.customerEmail}</td>
+                                    <td>$${order.totalAmount}</td>
+                                    <td><span class="status status-${order.status.toLowerCase()}">${
+                                  order.status
+                                }</span></td>
+                                    <td>${new Date(
+                                      order.createdAt
+                                    ).toLocaleDateString()}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                `;
+
+          document.getElementById("ordersList").innerHTML = table;
+        } catch (error) {
+          showMessage(
+            "ordersList",
+            "Error loading orders: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      // Benefits
+      document
+        .getElementById("benefitForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const benefit = {
+            orderId: parseInt(document.getElementById("benefitOrderId").value),
+            benefitType: document.getElementById("benefitType").value,
+            estimatedValue: parseFloat(
+              document.getElementById("benefitValue").value
+            ),
+            status: "PENDING",
+          };
+
+          try {
+            const response = await fetch(API_BASE.benefits, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(benefit),
+            });
+
+            if (response.ok) {
+              showMessage(
+                "benefitsList",
+                "Benefit estimation created successfully!"
+              );
+              document.getElementById("benefitForm").reset();
+              loadBenefits();
+            } else {
+              showMessage(
+                "benefitsList",
+                "Failed to create benefit estimation",
+                "error"
+              );
+            }
+          } catch (error) {
+            showMessage("benefitsList", "Error: " + error.message, "error");
+          }
+        });
+
+      async function loadBenefits() {
+        showLoading("benefitsList");
+
+        try {
+          const response = await fetch(API_BASE.benefits);
+          const benefits = await response.json();
+
+          if (benefits.length === 0) {
+            document.getElementById("benefitsList").innerHTML =
+              "<p>No benefit estimations found.</p>";
+            return;
+          }
+
+          const table = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Order ID</th>
+                                <th>Benefit Type</th>
+                                <th>Estimated Value</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${benefits
+                              .map(
+                                (benefit) => `
+                                <tr>
+                                    <td>${benefit.id}</td>
+                                    <td>${benefit.orderId}</td>
+                                    <td>${benefit.benefitType}</td>
+                                    <td>$${benefit.estimatedValue}</td>
+                                    <td><span class="status status-${benefit.status.toLowerCase()}">${
+                                  benefit.status
+                                }</span></td>
+                                    <td>${new Date(
+                                      benefit.createdAt
+                                    ).toLocaleDateString()}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                `;
+
+          document.getElementById("benefitsList").innerHTML = table;
+        } catch (error) {
+          showMessage(
+            "benefitsList",
+            "Error loading benefits: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      // Payouts
+      document
+        .getElementById("payoutForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const payout = {
+            benefitEstimationId: parseInt(
+              document.getElementById("payoutEstimationId").value
+            ),
+            customerId: document.getElementById("payoutCustomerId").value,
+            amount: parseFloat(document.getElementById("payoutAmount").value),
+            payoutMethod: document.getElementById("payoutMethod").value,
+            additionalDetails: "Created via dashboard",
+          };
+
+          try {
+            const response = await fetch(API_BASE.payouts, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payout),
+            });
+
+            if (response.ok) {
+              showMessage("payoutsList", "Payout created successfully!");
+              document.getElementById("payoutForm").reset();
+              loadPayouts();
+            } else {
+              showMessage("payoutsList", "Failed to create payout", "error");
+            }
+          } catch (error) {
+            showMessage("payoutsList", "Error: " + error.message, "error");
+          }
+        });
+
+      async function loadPayouts() {
+        showLoading("payoutsList");
+
+        try {
+          const response = await fetch(API_BASE.payouts);
+          const payouts = await response.json();
+
+          if (payouts.length === 0) {
+            document.getElementById("payoutsList").innerHTML =
+              "<p>No payouts found.</p>";
+            return;
+          }
+
+          const table = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer ID</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${payouts
+                              .map(
+                                (payout) => `
+                                <tr>
+                                    <td>${payout.id}</td>
+                                    <td>${payout.customerId}</td>
+                                    <td>$${payout.payoutAmount}</td>
+                                    <td>${payout.payoutMethod}</td>
+                                    <td><span class="status status-${payout.status.toLowerCase()}">${
+                                  payout.status
+                                }</span></td>
+                                    <td>${new Date(
+                                      payout.payoutDate
+                                    ).toLocaleDateString()}</td>
+                                </tr>
+                            `
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                `;
+
+          document.getElementById("payoutsList").innerHTML = table;
+        } catch (error) {
+          showMessage(
+            "payoutsList",
+            "Error loading payouts: " + error.message,
+            "error"
+          );
+        }
+      }
+
+      // Load initial data
+      window.onload = function () {
+        loadProducts();
+      };
+    </script>
+  </body>
+</html>
+
+

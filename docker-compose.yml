@@ -1,52 +1,160 @@
 services:
+  # Database Services
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: microservices_db
+      MYSQL_USER: microservices_user
+      MYSQL_PASSWORD: microservices_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 20s
+      retries: 10
+
+  # Microservices
   product-service:
     build: ./product-service
+    container_name: product-service
     ports:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservices_db
+      - SPRING_DATASOURCE_USERNAME=microservices_user
+      - SPRING_DATASOURCE_PASSWORD=microservices_pass
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - microservices-network
 
   order-service:
     build: ./order-service
+    container_name: order-service
     ports:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - PRODUCT_SERVICE_URL=http://product-service:8081/api/products
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservices_db
+      - SPRING_DATASOURCE_USERNAME=microservices_user
+      - SPRING_DATASOURCE_PASSWORD=microservices_pass
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
     depends_on:
-      - product-service
+      product-service:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - microservices-network
 
   benefit-estimation-service:
     build: ./benefit-estimation-service
+    container_name: benefit-estimation-service
     ports:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - ORDER_SERVICE_URL=http://order-service:8082/api/orders
       - PRODUCT_SERVICE_URL=http://product-service:8081/api/products
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservices_db
+      - SPRING_DATASOURCE_USERNAME=microservices_user
+      - SPRING_DATASOURCE_PASSWORD=microservices_pass
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
     depends_on:
-      - order-service
-      - product-service
+      order-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - microservices-network
 
   payout-service:
     build: ./payout-service
+    container_name: payout-service
     ports:
       - "8084:8084"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - BENEFIT_ESTIMATION_SERVICE_URL=http://benefit-estimation-service:8083/api/benefit-estimations
       - ORDER_SERVICE_URL=http://order-service:8082/api/orders
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/microservices_db
+      - SPRING_DATASOURCE_USERNAME=microservices_user
+      - SPRING_DATASOURCE_PASSWORD=microservices_pass
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
     depends_on:
-      - benefit-estimation-service
-      - order-service
+      benefit-estimation-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - microservices-network
+
+  # Frontend Application
+  frontend:
+    build: ./frontend
+    container_name: frontend-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_PRODUCT_SERVICE_URL=http://product-service:8081/api
+      - NEXT_PUBLIC_ORDER_SERVICE_URL=http://order-service:8082/api
+      - NEXT_PUBLIC_BENEFIT_ESTIMATION_SERVICE_URL=http://benefit-estimation-service:8083/api
+      - NEXT_PUBLIC_PAYOUT_SERVICE_URL=http://payout-service:8084/api
+    depends_on:
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      benefit-estimation-service:
+        condition: service_started
+      payout-service:
+        condition: service_started
+    networks:
+      - microservices-network
+
+volumes:
+  mysql_data:
+  redis_data:
 
 networks:
   microservices-network:

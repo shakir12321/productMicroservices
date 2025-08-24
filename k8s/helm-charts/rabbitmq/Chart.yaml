@@ -1,0 +1,16 @@
+apiVersion: v2
+name: rabbitmq
+description: A Helm chart for RabbitMQ message broker
+type: application
+version: 0.1.0
+appVersion: "3.12"
+keywords:
+  - message-broker
+  - rabbitmq
+  - amqp
+home: https://www.rabbitmq.com/
+sources:
+  - https://github.com/rabbitmq/rabbitmq-server
+maintainers:
+  - name: Backing Service Team
+    email: backing-service@example.com

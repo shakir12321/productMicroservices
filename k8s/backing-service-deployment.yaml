@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backing-service
+  labels:
+    app: backing-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backing-service
+  template:
+    metadata:
+      labels:
+        app: backing-service
+    spec:
+      containers:
+      - name: backing-service
+        image: backing-service:latest
+        ports:
+        - containerPort: 8084
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "docker"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backing-service
+  labels:
+    app: backing-service
+spec:
+  ports:
+  - port: 8084
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: backing-service

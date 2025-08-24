@@ -1,0 +1,44 @@
+# Production values for CockroachDB
+# This demonstrates how Helm allows different configurations for different environments
+
+# Increase replicas for production (but remember: single-node mode won't work with multiple replicas)
+replicaCount: 1
+
+# Use a specific image tag for production
+image:
+  repository: cockroachdb/cockroach
+  tag: "23.1.13"
+  pullPolicy: Always
+
+# Production resource limits
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Production storage (commented out - would need PVC setup)
+storage:
+  type: emptyDir # In production, you'd use: persistentVolumeClaim
+  # type: persistentVolumeClaim
+  # size: 50Gi
+
+# Production service type
+service:
+  type: ClusterIP
+  ports:
+    grpc: 26257
+    http: 8080
+
+# Production labels
+labels:
+  environment: production
+  team: backend
+  cost-center: database
+
+# Production annotations
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"

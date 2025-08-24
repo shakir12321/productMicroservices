@@ -1,0 +1,29 @@
+1. Get the application URL by running these commands:
+{{- if contains "NodePort" .Values.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "mysql.fullname" . }}-service)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo mysql://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+        You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "mysql.fullname" . }}-service'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "mysql.fullname" . }}-service --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo mysql://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "mysql.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  echo "MySQL is accessible at {{ include "mysql.fullname" . }}-service:{{ .Values.service.port }}"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME {{ .Values.service.port }}:{{ .Values.mysql.port }}
+{{- end }}
+
+2. MySQL Connection Details:
+   Host: {{ include "mysql.fullname" . }}-service
+   Port: {{ .Values.service.port }}
+   Database: {{ .Values.mysql.database }}
+   Root Password: {{ .Values.mysql.rootPassword }}
+   Username: {{ .Values.mysql.username }}
+   Password: {{ .Values.mysql.password }}
+
+3. Connect to MySQL:
+   kubectl exec -it $(kubectl get pods -l "app.kubernetes.io/name={{ include "mysql.name" . }}" -o jsonpath="{.items[0].metadata.name}") -- mysql -u root -p{{ .Values.mysql.rootPassword }} {{ .Values.mysql.database }}
+
+4. Create additional databases:
+   kubectl exec -it $(kubectl get pods -l "app.kubernetes.io/name={{ include "mysql.name" . }}" -o jsonpath="{.items[0].metadata.name}") -- mysql -u root -p{{ .Values.mysql.rootPassword }} -e "CREATE DATABASE IF NOT EXISTS product_service;"

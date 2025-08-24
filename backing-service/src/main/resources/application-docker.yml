@@ -1,0 +1,43 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: backing-service
+  
+  # Database Configuration (CockroachDB)
+  datasource:
+    url: jdbc:postgresql://cockroachdb-public:26257/backing_service?sslmode=disable
+    username: root
+    password: 
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: redis-service
+      port: 6379
+      timeout: 2000ms
+  
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: rabbitmq-service
+    port: 5672
+    username: guest
+    password: guest
+
+# Logging
+logging:
+  level:
+    com.example.backingservice: INFO
+    org.springframework.amqp: INFO
+    org.springframework.data.redis: INFO

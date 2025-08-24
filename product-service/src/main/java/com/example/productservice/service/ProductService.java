@@ -3,6 +3,8 @@ package com.example.productservice.service;
 import com.example.productservice.model.Product;
 import com.example.productservice.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,18 +20,22 @@ public class ProductService {
         this.productRepository = productRepository;
     }
     
+    @Cacheable(value = "products", key = "'all'")
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
     
+    @Cacheable(value = "products", key = "#id")
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
     
+    @CacheEvict(value = "products", allEntries = true)
     public Product createProduct(Product product) {
         return productRepository.save(product);
     }
     
+    @CacheEvict(value = "products", allEntries = true)
     public Optional<Product> updateProduct(Long id, Product productDetails) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
@@ -42,6 +48,7 @@ public class ProductService {
                 });
     }
     
+    @CacheEvict(value = "products", allEntries = true)
     public boolean deleteProduct(Long id) {
         if (productRepository.existsById(id)) {
             productRepository.deleteById(id);

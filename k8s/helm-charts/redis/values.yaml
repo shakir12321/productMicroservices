@@ -1,0 +1,55 @@
+# Default values for redis
+# This is a YAML-formatted file.
+
+# Replica count for the deployment
+replicaCount: 2
+
+# Image configuration
+image:
+  repository: redis
+  tag: "7.0"
+  pullPolicy: IfNotPresent
+
+# Redis configuration
+redis:
+  # Port
+  port: 6379
+  # Password (empty for no auth)
+  password: ""
+  # Enable persistence
+  persistence: false
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 6379
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Storage configuration
+storage:
+  # Use emptyDir for development (temporary storage)
+  type: emptyDir
+  # For production, you would use persistent volumes
+  # type: persistentVolumeClaim
+  # size: 5Gi
+
+# Labels and annotations
+labels: {}
+annotations: {}
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

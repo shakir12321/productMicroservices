@@ -1,0 +1,16 @@
+apiVersion: v2
+name: cockroachdb
+description: A Helm chart for CockroachDB single-node deployment
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - database
+  - cockroachdb
+  - distributed
+home: https://www.cockroachlabs.com/
+sources:
+  - https://github.com/cockroachdb/cockroach
+maintainers:
+  - name: Backing Service Team
+    email: backing-service@example.com

@@ -1,0 +1,59 @@
+# Default values for mysql
+# This is a YAML-formatted file.
+
+# Replica count for the deployment
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: mysql
+  tag: "8.0"
+  pullPolicy: IfNotPresent
+
+# MySQL configuration
+mysql:
+  # Root password
+  rootPassword: "root"
+  # Database name to create
+  database: "ecommerce"
+  # Username for application
+  username: "appuser"
+  # Password for application user
+  password: "apppass"
+  # Port
+  port: 3306
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 3306
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Storage configuration
+storage:
+  # Use emptyDir for development (temporary storage)
+  type: emptyDir
+  # For production, you would use persistent volumes
+  # type: persistentVolumeClaim
+  # size: 10Gi
+
+# Labels and annotations
+labels: {}
+annotations: {}
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

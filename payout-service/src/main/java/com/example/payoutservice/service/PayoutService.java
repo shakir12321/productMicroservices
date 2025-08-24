@@ -2,7 +2,6 @@ package com.example.payoutservice.service;
 
 import com.example.payoutservice.client.BenefitEstimationServiceClient;
 import com.example.payoutservice.dto.PayoutRequestDto;
-import com.example.payoutservice.dto.BenefitEstimationDto;
 import com.example.payoutservice.model.Payout;
 import com.example.payoutservice.model.PayoutMethod;
 import com.example.payoutservice.model.PayoutStatus;
@@ -11,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class PayoutService {
@@ -39,62 +40,36 @@ public class PayoutService {
     @Transactional
     public Payout createPayout(PayoutRequestDto request) {
         // Get benefit estimation details from benefit estimation service
-        BenefitEstimationDto benefitEstimation = benefitEstimationServiceClient
+        Map<String, Object> benefitEstimation = benefitEstimationServiceClient
                 .getBenefitEstimationById(request.getBenefitEstimationId()).block();
         
         if (benefitEstimation == null) {
             throw new RuntimeException("Benefit estimation not found with ID: " + request.getBenefitEstimationId());
         }
         
-        if (benefitEstimation.getStatus().name().equals("REJECTED") || 
-            benefitEstimation.getStatus().name().equals("EXPIRED")) {
-            throw new RuntimeException("Benefit estimation is not eligible for payout");
-        }
-        
         // Create payout
         Payout payout = new Payout();
         payout.setBenefitEstimationId(request.getBenefitEstimationId());
-        payout.setCustomerId(benefitEstimation.getCustomerId());
-        payout.setOrderId(benefitEstimation.getOrderId());
-        payout.setPayoutAmount(benefitEstimation.getEstimatedBenefitAmount());
+        payout.setCustomerId(request.getCustomerId());
+        payout.setOrderId(0L); // We'll get this from benefit estimation if needed
+        payout.setPayoutAmount(request.getAmount());
         payout.setPayoutMethod(request.getPayoutMethod());
         payout.setStatus(PayoutStatus.PENDING);
-        payout.setReferenceNumber(generateReferenceNumber());
+        payout.setReferenceNumber(generateTransactionId());
+        payout.setPayoutDate(LocalDateTime.now());
         payout.setTransactionDetails(generateTransactionDetails(benefitEstimation, request));
         
         return payoutRepository.save(payout);
     }
     
-    private String generateReferenceNumber() {
-        return "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private String generateTransactionId() {
+        return "PAYOUT-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
     }
     
-    private String generateTransactionDetails(BenefitEstimationDto benefitEstimation, PayoutRequestDto request) {
-        return String.format("Payout for Order #%s, Benefit Type: %s, Amount: $%s, Method: %s, Details: %s",
-                           benefitEstimation.getOrderId(), benefitEstimation.getBenefitType(),
-                           benefitEstimation.getEstimatedBenefitAmount(), request.getPayoutMethod(),
-                           request.getAdditionalDetails() != null ? request.getAdditionalDetails() : "N/A");
-    }
-    
-    public Optional<Payout> processPayout(Long id) {
-        return payoutRepository.findById(id)
-                .map(payout -> {
-                    try {
-                        // Simulate payout processing
-                        payout.setStatus(PayoutStatus.PROCESSING);
-                        payout = payoutRepository.save(payout);
-                        
-                        // Simulate successful processing
-                        payout.setStatus(PayoutStatus.COMPLETED);
-                        payout.setTransactionDetails(payout.getTransactionDetails() + " - Processed successfully");
-                        
-                        return payoutRepository.save(payout);
-                    } catch (Exception e) {
-                        payout.setStatus(PayoutStatus.FAILED);
-                        payout.setFailureReason("Processing failed: " + e.getMessage());
-                        return payoutRepository.save(payout);
-                    }
-                });
+    private String generateTransactionDetails(Map<String, Object> benefitEstimation, PayoutRequestDto request) {
+        return String.format("Payout for Benefit Estimation ID: %d, Amount: $%s, Method: %s, Customer: %s", 
+                           request.getBenefitEstimationId(), request.getAmount(), request.getPayoutMethod(), 
+                           request.getCustomerId());
     }
     
     public Optional<Payout> updatePayoutStatus(Long id, PayoutStatus status) {
@@ -117,20 +92,16 @@ public class PayoutService {
         return payoutRepository.findByCustomerId(customerId);
     }
     
-    public List<Payout> getPayoutsByOrderId(Long orderId) {
-        return payoutRepository.findByOrderId(orderId);
-    }
-    
     public List<Payout> getPayoutsByBenefitEstimationId(Long benefitEstimationId) {
         return payoutRepository.findByBenefitEstimationId(benefitEstimationId);
     }
     
-    public List<Payout> getPayoutsByPayoutMethod(PayoutMethod payoutMethod) {
-        return payoutRepository.findByPayoutMethod(payoutMethod);
+    public List<Payout> getPayoutsByStatus(String status) {
+        return payoutRepository.findByStatus(PayoutStatus.valueOf(status.toUpperCase()));
     }
     
-    public List<Payout> getPayoutsByStatus(PayoutStatus status) {
-        return payoutRepository.findByStatus(status);
+    public List<Payout> getPayoutsByPayoutMethod(PayoutMethod payoutMethod) {
+        return payoutRepository.findByPayoutMethod(payoutMethod);
     }
     
     public List<Payout> getPayoutsByCustomerAndStatus(String customerId, PayoutStatus status) {

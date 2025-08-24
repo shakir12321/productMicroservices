@@ -1,0 +1,61 @@
+# Default values for cockroachdb
+# This is a YAML-formatted file.
+
+# Replica count for the deployment
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: cockroachdb/cockroach
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# CockroachDB configuration
+cockroachdb:
+  # Single node mode for development
+  singleNode: true
+  # Insecure mode for development (no TLS)
+  insecure: true
+  # Listen address
+  listenAddr: "0.0.0.0"
+  # Advertise address
+  advertiseAddr: "cockroachdb"
+  # HTTP admin interface address
+  httpAddr: "0.0.0.0:8080"
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    grpc: 26257
+    http: 8080
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Storage configuration
+storage:
+  # Use emptyDir for development (temporary storage)
+  type: emptyDir
+  # For production, you would use persistent volumes
+  # type: persistentVolumeClaim
+  # size: 10Gi
+
+# Labels and annotations
+labels: {}
+annotations: {}
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

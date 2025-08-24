@@ -4,18 +4,18 @@ server:
 spring:
   application:
     name: product-service
-  
+
   datasource:
     url: jdbc:h2:mem:productdb
     driver-class-name: org.h2.Driver
     username: sa
     password: password
-  
+
   h2:
     console:
       enabled: true
       path: /h2-console
-  
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -24,6 +24,18 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+  packages-to-scan: com.example.productservice.controller
 
 logging:
   level:

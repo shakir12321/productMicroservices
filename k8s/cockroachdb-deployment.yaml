@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cockroachdb
+  labels:
+    app: cockroachdb
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cockroachdb
+  template:
+    metadata:
+      labels:
+        app: cockroachdb
+    spec:
+      containers:
+        - name: cockroachdb
+          image: cockroachdb/cockroach:v23.1.13
+          command:
+            - /cockroach/cockroach
+            - start-single-node
+            - --insecure
+            - --listen-addr=0.0.0.0
+            - --advertise-addr=cockroachdb
+            - --http-addr=0.0.0.0:8080
+          ports:
+            - containerPort: 26257
+              name: grpc
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: cockroachdb-data
+              mountPath: /cockroach/cockroach-data
+      volumes:
+        - name: cockroachdb-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+spec:
+  ports:
+    - port: 26257
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: cockroachdb

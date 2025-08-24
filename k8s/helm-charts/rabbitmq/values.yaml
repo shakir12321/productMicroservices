@@ -1,0 +1,57 @@
+# Default values for rabbitmq
+# This is a YAML-formatted file.
+
+# Replica count for the deployment
+replicaCount: 1
+
+# Image configuration
+image:
+  repository: rabbitmq
+  tag: "3.12-management"
+  pullPolicy: IfNotPresent
+
+# RabbitMQ configuration
+rabbitmq:
+  # Default username
+  username: "guest"
+  # Default password
+  password: "guest"
+  # Management plugin enabled
+  management: true
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    amqp: 5672
+    management: 15672
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Storage configuration
+storage:
+  # Use emptyDir for development (temporary storage)
+  type: emptyDir
+  # For production, you would use persistent volumes
+  # type: persistentVolumeClaim
+  # size: 5Gi
+
+# Labels and annotations
+labels: {}
+annotations: {}
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

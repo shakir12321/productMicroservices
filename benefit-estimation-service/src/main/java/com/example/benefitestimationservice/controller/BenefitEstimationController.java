@@ -2,9 +2,15 @@ package com.example.benefitestimationservice.controller;
 
 import com.example.benefitestimationservice.dto.BenefitEstimationRequestDto;
 import com.example.benefitestimationservice.model.BenefitEstimation;
-import com.example.benefitestimationservice.model.BenefitType;
 import com.example.benefitestimationservice.model.EstimationStatus;
 import com.example.benefitestimationservice.service.BenefitEstimationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,30 +23,54 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/benefit-estimations")
 @CrossOrigin(origins = "*")
+@Tag(name = "Benefit Estimation Management", description = "APIs for managing benefit estimations in the e-commerce platform")
 public class BenefitEstimationController {
-    
+
     private final BenefitEstimationService benefitEstimationService;
-    
+
     @Autowired
     public BenefitEstimationController(BenefitEstimationService benefitEstimationService) {
         this.benefitEstimationService = benefitEstimationService;
     }
-    
+
     @GetMapping
-    public ResponseEntity<List<BenefitEstimation>> getAllEstimations() {
+    @Operation(summary = "Get all benefit estimations", description = "Retrieve a list of all benefit estimations in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved benefit estimations",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = BenefitEstimation.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<BenefitEstimation>> getAllBenefitEstimations() {
         List<BenefitEstimation> estimations = benefitEstimationService.getAllEstimations();
         return ResponseEntity.ok(estimations);
     }
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<BenefitEstimation> getEstimationById(@PathVariable Long id) {
+    @Operation(summary = "Get benefit estimation by ID", description = "Retrieve a specific benefit estimation by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved benefit estimation"),
+        @ApiResponse(responseCode = "404", description = "Benefit estimation not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<BenefitEstimation> getBenefitEstimationById(
+            @Parameter(description = "ID of the benefit estimation to retrieve", required = true)
+            @PathVariable Long id) {
         Optional<BenefitEstimation> estimation = benefitEstimationService.getEstimationById(id);
         return estimation.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @PostMapping
-    public ResponseEntity<BenefitEstimation> createBenefitEstimation(@Valid @RequestBody BenefitEstimationRequestDto request) {
+    @Operation(summary = "Create a new benefit estimation", description = "Create a new benefit estimation in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Benefit estimation created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<BenefitEstimation> createBenefitEstimation(
+            @Parameter(description = "Benefit estimation request object", required = true)
+            @Valid @RequestBody BenefitEstimationRequestDto request) {
         try {
             BenefitEstimation createdEstimation = benefitEstimationService.createBenefitEstimation(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdEstimation);
@@ -48,51 +78,30 @@ public class BenefitEstimationController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
-    @PutMapping("/{id}/status")
-    public ResponseEntity<BenefitEstimation> updateEstimationStatus(@PathVariable Long id, @RequestParam EstimationStatus status) {
-        Optional<BenefitEstimation> updatedEstimation = benefitEstimationService.updateEstimationStatus(id, status);
-        return updatedEstimation.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEstimation(@PathVariable Long id) {
-        boolean deleted = benefitEstimationService.deleteEstimation(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-    
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<BenefitEstimation>> getEstimationsByCustomerId(@PathVariable String customerId) {
-        List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByCustomerId(customerId);
-        return ResponseEntity.ok(estimations);
-    }
-    
+
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<BenefitEstimation>> getEstimationsByOrderId(@PathVariable Long orderId) {
+    @Operation(summary = "Get benefit estimations by order ID", description = "Retrieve all benefit estimations for a specific order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved benefit estimations for order"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<BenefitEstimation>> getBenefitEstimationsByOrderId(
+            @Parameter(description = "Order ID to filter by", required = true)
+            @PathVariable Long orderId) {
         List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByOrderId(orderId);
         return ResponseEntity.ok(estimations);
     }
-    
-    @GetMapping("/benefit-type/{benefitType}")
-    public ResponseEntity<List<BenefitEstimation>> getEstimationsByBenefitType(@PathVariable BenefitType benefitType) {
-        List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByBenefitType(benefitType);
-        return ResponseEntity.ok(estimations);
-    }
-    
+
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<BenefitEstimation>> getEstimationsByStatus(@PathVariable EstimationStatus status) {
-        List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByStatus(status);
-        return ResponseEntity.ok(estimations);
-    }
-    
-    @GetMapping("/customer/{customerId}/status/{status}")
-    public ResponseEntity<List<BenefitEstimation>> getEstimationsByCustomerAndStatus(@PathVariable String customerId, 
-                                                                                    @PathVariable EstimationStatus status) {
-        List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByCustomerAndStatus(customerId, status);
+    @Operation(summary = "Get benefit estimations by status", description = "Retrieve all benefit estimations with a specific status")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved benefit estimations by status"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<BenefitEstimation>> getBenefitEstimationsByStatus(
+            @Parameter(description = "Status to filter by", required = true)
+            @PathVariable String status) {
+        List<BenefitEstimation> estimations = benefitEstimationService.getEstimationsByStatus(EstimationStatus.valueOf(status.toUpperCase()));
         return ResponseEntity.ok(estimations);
     }
 }

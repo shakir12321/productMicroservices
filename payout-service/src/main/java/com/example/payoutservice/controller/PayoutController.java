@@ -2,9 +2,14 @@ package com.example.payoutservice.controller;
 
 import com.example.payoutservice.dto.PayoutRequestDto;
 import com.example.payoutservice.model.Payout;
-import com.example.payoutservice.model.PayoutMethod;
-import com.example.payoutservice.model.PayoutStatus;
 import com.example.payoutservice.service.PayoutService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,102 +22,81 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/payouts")
 @CrossOrigin(origins = "*")
+@Tag(name = "Payout Management", description = "APIs for managing payouts in the e-commerce platform")
 public class PayoutController {
-    
+
     private final PayoutService payoutService;
-    
+
     @Autowired
     public PayoutController(PayoutService payoutService) {
         this.payoutService = payoutService;
     }
-    
+
     @GetMapping
+    @Operation(summary = "Get all payouts", description = "Retrieve a list of all payouts in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved payouts",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = Payout.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public ResponseEntity<List<Payout>> getAllPayouts() {
         List<Payout> payouts = payoutService.getAllPayouts();
         return ResponseEntity.ok(payouts);
     }
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<Payout> getPayoutById(@PathVariable Long id) {
+    @Operation(summary = "Get payout by ID", description = "Retrieve a specific payout by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved payout"),
+        @ApiResponse(responseCode = "404", description = "Payout not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Payout> getPayoutById(
+            @Parameter(description = "ID of the payout to retrieve", required = true)
+            @PathVariable Long id) {
         Optional<Payout> payout = payoutService.getPayoutById(id);
         return payout.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @PostMapping
-    public ResponseEntity<Payout> createPayout(@Valid @RequestBody PayoutRequestDto request) {
-        try {
-            Payout createdPayout = payoutService.createPayout(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPayout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    @Operation(summary = "Create a new payout", description = "Create a new payout in the system")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Payout created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Payout> createPayout(
+            @Parameter(description = "Payout request object", required = true)
+            @Valid @RequestBody PayoutRequestDto request) {
+        Payout createdPayout = payoutService.createPayout(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPayout);
     }
-    
-    @PostMapping("/{id}/process")
-    public ResponseEntity<Payout> processPayout(@PathVariable Long id) {
-        Optional<Payout> processedPayout = payoutService.processPayout(id);
-        return processedPayout.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Payout> updatePayoutStatus(@PathVariable Long id, @RequestParam PayoutStatus status) {
-        Optional<Payout> updatedPayout = payoutService.updatePayoutStatus(id, status);
-        return updatedPayout.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePayout(@PathVariable Long id) {
-        boolean deleted = payoutService.deletePayout(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-    
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Payout>> getPayoutsByCustomerId(@PathVariable String customerId) {
-        List<Payout> payouts = payoutService.getPayoutsByCustomerId(customerId);
-        return ResponseEntity.ok(payouts);
-    }
-    
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<Payout>> getPayoutsByOrderId(@PathVariable Long orderId) {
-        List<Payout> payouts = payoutService.getPayoutsByOrderId(orderId);
-        return ResponseEntity.ok(payouts);
-    }
-    
-    @GetMapping("/benefit-estimation/{benefitEstimationId}")
-    public ResponseEntity<List<Payout>> getPayoutsByBenefitEstimationId(@PathVariable Long benefitEstimationId) {
-        List<Payout> payouts = payoutService.getPayoutsByBenefitEstimationId(benefitEstimationId);
-        return ResponseEntity.ok(payouts);
-    }
-    
-    @GetMapping("/method/{payoutMethod}")
-    public ResponseEntity<List<Payout>> getPayoutsByPayoutMethod(@PathVariable PayoutMethod payoutMethod) {
-        List<Payout> payouts = payoutService.getPayoutsByPayoutMethod(payoutMethod);
-        return ResponseEntity.ok(payouts);
-    }
-    
+
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Payout>> getPayoutsByStatus(@PathVariable PayoutStatus status) {
+    @Operation(summary = "Get payouts by status", description = "Retrieve all payouts with a specific status")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved payouts by status"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<Payout>> getPayoutsByStatus(
+            @Parameter(description = "Payout status to filter by", required = true)
+            @PathVariable String status) {
         List<Payout> payouts = payoutService.getPayoutsByStatus(status);
         return ResponseEntity.ok(payouts);
     }
-    
-    @GetMapping("/customer/{customerId}/status/{status}")
-    public ResponseEntity<List<Payout>> getPayoutsByCustomerAndStatus(@PathVariable String customerId, 
-                                                                     @PathVariable PayoutStatus status) {
-        List<Payout> payouts = payoutService.getPayoutsByCustomerAndStatus(customerId, status);
-        return ResponseEntity.ok(payouts);
-    }
-    
-    @GetMapping("/status/{status}/method/{payoutMethod}")
-    public ResponseEntity<List<Payout>> getPayoutsByStatusAndMethod(@PathVariable PayoutStatus status, 
-                                                                   @PathVariable PayoutMethod payoutMethod) {
-        List<Payout> payouts = payoutService.getPayoutsByStatusAndMethod(status, payoutMethod);
+
+    @GetMapping("/estimation/{estimationId}")
+    @Operation(summary = "Get payouts by benefit estimation ID", description = "Retrieve all payouts for a specific benefit estimation")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved payouts for estimation"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<Payout>> getPayoutsByEstimationId(
+            @Parameter(description = "Benefit estimation ID to filter by", required = true)
+            @PathVariable Long estimationId) {
+        List<Payout> payouts = payoutService.getPayoutsByBenefitEstimationId(estimationId);
         return ResponseEntity.ok(payouts);
     }
 }
