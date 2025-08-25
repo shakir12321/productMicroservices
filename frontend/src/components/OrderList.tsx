@@ -242,7 +242,9 @@ export default function OrderList() {
 
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-900">Items:</h4>
-                {order.orderItems && Array.isArray(order.orderItems) && order.orderItems.length > 0 ? (
+                {order.orderItems &&
+                Array.isArray(order.orderItems) &&
+                order.orderItems.length > 0 ? (
                   order.orderItems.map((item, index) => (
                     <div
                       key={index}
@@ -256,7 +258,9 @@ export default function OrderList() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-gray-500">No items in this order.</div>
+                  <div className="text-sm text-gray-500">
+                    No items in this order.
+                  </div>
                 )}
               </div>
             </div>

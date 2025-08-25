@@ -181,10 +181,10 @@ export default function BenefitEstimationList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {estimations && estimations.length > 0 ? (
-          estimations.map((estimation: BenefitEstimation) => (
+        {estimations && Array.isArray(estimations) && estimations.length > 0 ? (
+          estimations.map((estimation: BenefitEstimation, index: number) => (
             <div
-              key={estimation.id}
+              key={estimation.id || index}
               className="bg-white rounded-lg shadow-md p-6 border"
             >
               <div className="flex justify-between items-start mb-4">
@@ -284,7 +284,7 @@ export default function BenefitEstimationList() {
                   required
                 >
                   <option value={0}>Select Order</option>
-                  {orders?.map((order: Order) => (
+                  {orders && Array.isArray(orders) && orders.map((order: Order) => (
                     <option key={order.id} value={order.id}>
                       Order #{order.id} - {order.customerName} ($
                       {order.totalAmount})

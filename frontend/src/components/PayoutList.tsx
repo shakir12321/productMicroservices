@@ -169,10 +169,10 @@ export default function PayoutList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {payouts && payouts.length > 0 ? (
-          payouts.map((payout: Payout) => (
+        {payouts && Array.isArray(payouts) && payouts.length > 0 ? (
+          payouts.map((payout: Payout, index: number) => (
             <div
-              key={payout.id}
+              key={payout.id || index}
               className="bg-white rounded-lg shadow-md p-6 border"
             >
               <div className="flex justify-between items-start mb-4">
@@ -270,7 +270,7 @@ export default function PayoutList() {
                   required
                 >
                   <option value={0}>Select Estimation</option>
-                  {estimations?.map((estimation: BenefitEstimation) => (
+                  {estimations && Array.isArray(estimations) && estimations.map((estimation: BenefitEstimation) => (
                     <option key={estimation.id} value={estimation.id}>
                       Estimation #{estimation.id} - ${estimation.estimatedValue}
                     </option>
