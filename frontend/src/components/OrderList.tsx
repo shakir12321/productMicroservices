@@ -184,9 +184,9 @@ export default function OrderList() {
 
       <div className="space-y-4">
         {orders && Array.isArray(orders) && orders.length > 0 ? (
-          orders.map((order: Order) => (
+          orders.map((order: Order, index: number) => (
             <div
-              key={order.id}
+              key={order.id || index}
               className="bg-white rounded-lg shadow-md p-6 border"
             >
               <div className="flex justify-between items-start mb-4">
@@ -242,18 +242,22 @@ export default function OrderList() {
 
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-900">Items:</h4>
-                {order.orderItems && Array.isArray(order.orderItems) && order.orderItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <span>
-                      {item.productName || `Product ID: ${item.productId}`}
-                    </span>
-                    <span>Qty: {item.quantity}</span>
-                    <span>${item.totalPrice}</span>
-                  </div>
-                ))}
+                {order.orderItems && Array.isArray(order.orderItems) && order.orderItems.length > 0 ? (
+                  order.orderItems.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span>
+                        {item.productName || `Product ID: ${item.productId}`}
+                      </span>
+                      <span>Qty: {item.quantity}</span>
+                      <span>${item.totalPrice}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">No items in this order.</div>
+                )}
               </div>
             </div>
           ))
