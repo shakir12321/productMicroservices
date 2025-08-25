@@ -29,6 +29,9 @@ export default function OrderList() {
     totalAmount: 0,
     status: "PENDING",
   });
+  
+  // Ensure formData.orderItems is always an array
+  const safeOrderItems = formData.orderItems || [];
 
   const queryClient = useQueryClient();
 
@@ -51,6 +54,9 @@ export default function OrderList() {
   });
 
   const products = productsResponse?.data?.data || [];
+  
+  // Ensure products is always an array
+  const safeProducts = Array.isArray(products) ? products : [];
 
   // Create order mutation
   const createMutation = useMutation({
@@ -168,6 +174,11 @@ export default function OrderList() {
     return (
       <div className="text-center py-8 text-red-600">Error loading orders</div>
     );
+  
+  // Ensure we have valid data before rendering
+  if (!response || !response.data) {
+    return <div className="text-center py-8">Loading orders...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -350,7 +361,7 @@ export default function OrderList() {
                   </button>
                 </div>
 
-                {formData.orderItems?.map((item, index) => (
+                {safeOrderItems.map((item, index) => (
                   <div key={index} className="grid grid-cols-4 gap-2 mb-2">
                     <select
                       value={item.productId}
@@ -360,11 +371,11 @@ export default function OrderList() {
                       className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       <option value={0}>Select Product</option>
-                      {products && Array.isArray(products) && products.map((product: Product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name} - ${product.price}
-                        </option>
-                      ))}
+                      {safeProducts.map((product: Product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name} - ${product.price}
+                          </option>
+                        ))}
                     </select>
                     <input
                       type="number"
