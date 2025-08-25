@@ -360,7 +360,7 @@ export default function OrderList() {
                       className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       <option value={0}>Select Product</option>
-                      {products?.map((product: Product) => (
+                      {products && Array.isArray(products) && products.map((product: Product) => (
                         <option key={product.id} value={product.id}>
                           {product.name} - ${product.price}
                         </option>

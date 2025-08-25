@@ -284,12 +284,14 @@ export default function BenefitEstimationList() {
                   required
                 >
                   <option value={0}>Select Order</option>
-                  {orders && Array.isArray(orders) && orders.map((order: Order) => (
-                    <option key={order.id} value={order.id}>
-                      Order #{order.id} - {order.customerName} ($
-                      {order.totalAmount})
-                    </option>
-                  ))}
+                  {orders &&
+                    Array.isArray(orders) &&
+                    orders.map((order: Order) => (
+                      <option key={order.id} value={order.id}>
+                        Order #{order.id} - {order.customerName} ($
+                        {order.totalAmount})
+                      </option>
+                    ))}
                 </select>
               </div>
 
