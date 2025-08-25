@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Payout,
+  BenefitEstimation,
   payoutApiFunctions,
   benefitEstimationApiFunctions,
 } from "@/lib/api";
@@ -31,7 +32,7 @@ export default function PayoutList() {
 
   // Fetch payouts
   const {
-    data: payouts,
+    data: response,
     isLoading,
     error,
   } = useQuery({
@@ -39,11 +40,15 @@ export default function PayoutList() {
     queryFn: payoutApiFunctions.getAllPayouts,
   });
 
+  const payouts = response?.data?.data || [];
+
   // Fetch benefit estimations for payout creation
-  const { data: estimations } = useQuery({
+  const { data: estimationsResponse } = useQuery({
     queryKey: ["benefit-estimations"],
     queryFn: benefitEstimationApiFunctions.getAllEstimations,
   });
+
+  const estimations = estimationsResponse?.data?.data || [];
 
   // Create payout mutation
   const createMutation = useMutation({
@@ -164,72 +169,80 @@ export default function PayoutList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {payouts?.data?.map((payout) => (
-          <div
-            key={payout.id}
-            className="bg-white rounded-lg shadow-md p-6 border"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Payout #{payout.id}
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(payout)}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(payout.id!)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Hash size={16} className="text-gray-600" />
-                <span>Estimation ID: {payout.benefitEstimationId}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign size={16} className="text-green-600" />
-                <span className="font-medium">${payout.amount}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <CreditCard size={16} className="text-blue-600" />
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getPayoutMethodColor(
-                    payout.payoutMethod
-                  )}`}
-                >
-                  {formatPayoutMethod(payout.payoutMethod)}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    payout.status
-                  )}`}
-                >
-                  {payout.status}
-                </span>
-              </div>
-
-              {payout.createdAt && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar size={16} />
-                  <span>{new Date(payout.createdAt).toLocaleDateString()}</span>
+        {payouts && payouts.length > 0 ? (
+          payouts.map((payout: Payout) => (
+            <div
+              key={payout.id}
+              className="bg-white rounded-lg shadow-md p-6 border"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Payout #{payout.id}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(payout)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(payout.id!)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Hash size={16} className="text-gray-600" />
+                  <span>Estimation ID: {payout.benefitEstimationId}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign size={16} className="text-green-600" />
+                  <span className="font-medium">${payout.amount}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <CreditCard size={16} className="text-blue-600" />
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getPayoutMethodColor(
+                      payout.payoutMethod
+                    )}`}
+                  >
+                    {formatPayoutMethod(payout.payoutMethod)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      payout.status
+                    )}`}
+                  >
+                    {payout.status}
+                  </span>
+                </div>
+
+                {payout.createdAt && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar size={16} />
+                    <span>
+                      {new Date(payout.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No payouts found.
           </div>
-        ))}
+        )}
       </div>
 
       {/* Modal */}
@@ -257,7 +270,7 @@ export default function PayoutList() {
                   required
                 >
                   <option value={0}>Select Estimation</option>
-                  {estimations?.data?.map((estimation) => (
+                  {estimations?.map((estimation: BenefitEstimation) => (
                     <option key={estimation.id} value={estimation.id}>
                       Estimation #{estimation.id} - ${estimation.estimatedValue}
                     </option>

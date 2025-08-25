@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Order, orderApiFunctions, productApiFunctions } from "@/lib/api";
+import {
+  Order,
+  OrderItem,
+  Product,
+  orderApiFunctions,
+  productApiFunctions,
+} from "@/lib/api";
 import {
   Plus,
   Edit,
@@ -19,7 +25,7 @@ export default function OrderList() {
   const [formData, setFormData] = useState<Partial<Order>>({
     customerName: "",
     customerEmail: "",
-    items: [],
+    orderItems: [],
     totalAmount: 0,
     status: "PENDING",
   });
@@ -28,7 +34,7 @@ export default function OrderList() {
 
   // Fetch orders
   const {
-    data: orders,
+    data: response,
     isLoading,
     error,
   } = useQuery({
@@ -36,11 +42,15 @@ export default function OrderList() {
     queryFn: orderApiFunctions.getAllOrders,
   });
 
+  const orders = response?.data?.data || [];
+
   // Fetch products for order creation
-  const { data: products } = useQuery({
+  const { data: productsResponse } = useQuery({
     queryKey: ["products"],
     queryFn: productApiFunctions.getAllProducts,
   });
+
+  const products = productsResponse?.data?.data || [];
 
   // Create order mutation
   const createMutation = useMutation({
@@ -76,7 +86,7 @@ export default function OrderList() {
     setFormData({
       customerName: "",
       customerEmail: "",
-      items: [],
+      orderItems: [],
       totalAmount: 0,
       status: "PENDING",
     });
@@ -106,33 +116,33 @@ export default function OrderList() {
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [
-        ...(formData.items || []),
-        { productId: 0, quantity: 1, price: 0 },
+      orderItems: [
+        ...(formData.orderItems || []),
+        { productId: 0, quantity: 1, unitPrice: 0, totalPrice: 0 },
       ],
     });
   };
 
   const removeItem = (index: number) => {
-    const newItems = formData.items?.filter((_, i) => i !== index) || [];
-    setFormData({ ...formData, items: newItems });
+    const newItems = formData.orderItems?.filter((_, i) => i !== index) || [];
+    setFormData({ ...formData, orderItems: newItems });
   };
 
   const updateItem = (
     index: number,
-    field: keyof Order["items"][0],
+    field: keyof OrderItem,
     value: string | number
   ) => {
-    const newItems = [...(formData.items || [])];
+    const newItems = [...(formData.orderItems || [])];
     newItems[index] = { ...newItems[index], [field]: value };
 
     // Calculate total amount
     const total = newItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + item.unitPrice * item.quantity,
       0
     );
 
-    setFormData({ ...formData, items: newItems, totalAmount: total });
+    setFormData({ ...formData, orderItems: newItems, totalAmount: total });
   };
 
   const getStatusColor = (status: string) => {
@@ -173,77 +183,83 @@ export default function OrderList() {
       </div>
 
       <div className="space-y-4">
-        {orders?.data?.map((order) => (
-          <div
-            key={order.id}
-            className="bg-white rounded-lg shadow-md p-6 border"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Order #{order.id}
-                </h3>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <User size={16} />
-                    <span>{order.customerName}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Mail size={16} />
-                    <span>{order.customerEmail}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign size={16} />
-                    <span>${order.totalAmount}</span>
-                  </div>
-                  {order.createdAt && (
+        {orders && Array.isArray(orders) && orders.length > 0 ? (
+          orders.map((order: Order) => (
+            <div
+              key={order.id}
+              className="bg-white rounded-lg shadow-md p-6 border"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Order #{order.id}
+                  </h3>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
-                      <Calendar size={16} />
-                      <span>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </span>
+                      <User size={16} />
+                      <span>{order.customerName}</span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-1">
+                      <Mail size={16} />
+                      <span>{order.customerEmail}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <DollarSign size={16} />
+                      <span>${order.totalAmount}</span>
+                    </div>
+                    {order.orderDate && (
+                      <div className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        <span>
+                          {new Date(order.orderDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
+                    {order.status}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(order)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(order.id!)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    order.status
-                  )}`}
-                >
-                  {order.status}
-                </span>
-                <button
-                  onClick={() => handleEdit(order)}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(order.id!)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">Items:</h4>
-              {order.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <span>Product ID: {item.productId}</span>
-                  <span>Qty: {item.quantity}</span>
-                  <span>${item.price}</span>
-                </div>
-              ))}
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900">Items:</h4>
+                {order.orderItems && Array.isArray(order.orderItems) && order.orderItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center text-sm"
+                  >
+                    <span>
+                      {item.productName || `Product ID: ${item.productId}`}
+                    </span>
+                    <span>Qty: {item.quantity}</span>
+                    <span>${item.totalPrice}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">No orders found.</div>
+        )}
       </div>
 
       {/* Modal */}
@@ -326,7 +342,7 @@ export default function OrderList() {
                   </button>
                 </div>
 
-                {formData.items?.map((item, index) => (
+                {formData.orderItems?.map((item, index) => (
                   <div key={index} className="grid grid-cols-4 gap-2 mb-2">
                     <select
                       value={item.productId}
@@ -336,7 +352,7 @@ export default function OrderList() {
                       className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       <option value={0}>Select Product</option>
-                      {products?.data?.map((product) => (
+                      {products?.map((product: Product) => (
                         <option key={product.id} value={product.id}>
                           {product.name} - ${product.price}
                         </option>
@@ -355,10 +371,14 @@ export default function OrderList() {
                     <input
                       type="number"
                       step="0.01"
-                      placeholder="Price"
-                      value={item.price}
+                      placeholder="Unit Price"
+                      value={item.unitPrice}
                       onChange={(e) =>
-                        updateItem(index, "price", parseFloat(e.target.value))
+                        updateItem(
+                          index,
+                          "unitPrice",
+                          parseFloat(e.target.value)
+                        )
                       }
                       className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />

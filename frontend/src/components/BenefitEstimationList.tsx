@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   BenefitEstimation,
+  Order,
   benefitEstimationApiFunctions,
   orderApiFunctions,
 } from "@/lib/api";
@@ -32,7 +33,7 @@ export default function BenefitEstimationList() {
 
   // Fetch benefit estimations
   const {
-    data: estimations,
+    data: response,
     isLoading,
     error,
   } = useQuery({
@@ -40,11 +41,15 @@ export default function BenefitEstimationList() {
     queryFn: benefitEstimationApiFunctions.getAllEstimations,
   });
 
+  const estimations = response?.data?.data || [];
+
   // Fetch orders for estimation creation
-  const { data: orders } = useQuery({
+  const { data: ordersResponse } = useQuery({
     queryKey: ["orders"],
     queryFn: orderApiFunctions.getAllOrders,
   });
+
+  const orders = ordersResponse?.data?.data || [];
 
   // Create estimation mutation
   const createMutation = useMutation({
@@ -176,76 +181,82 @@ export default function BenefitEstimationList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {estimations?.data?.map((estimation) => (
-          <div
-            key={estimation.id}
-            className="bg-white rounded-lg shadow-md p-6 border"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Estimation #{estimation.id}
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(estimation)}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(estimation.id!)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Hash size={16} className="text-gray-600" />
-                <span>Order ID: {estimation.orderId}</span>
+        {estimations && estimations.length > 0 ? (
+          estimations.map((estimation: BenefitEstimation) => (
+            <div
+              key={estimation.id}
+              className="bg-white rounded-lg shadow-md p-6 border"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Estimation #{estimation.id}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(estimation)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(estimation.id!)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <Gift size={16} className="text-purple-600" />
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getBenefitTypeColor(
-                    estimation.benefitType
-                  )}`}
-                >
-                  {formatBenefitType(estimation.benefitType)}
-                </span>
-              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Hash size={16} className="text-gray-600" />
+                  <span>Order ID: {estimation.orderId}</span>
+                </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign size={16} className="text-green-600" />
-                <span className="font-medium">
-                  ${estimation.estimatedValue}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    estimation.status
-                  )}`}
-                >
-                  {estimation.status}
-                </span>
-              </div>
-
-              {estimation.createdAt && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar size={16} />
-                  <span>
-                    {new Date(estimation.createdAt).toLocaleDateString()}
+                <div className="flex items-center gap-2 text-sm">
+                  <Gift size={16} className="text-purple-600" />
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getBenefitTypeColor(
+                      estimation.benefitType
+                    )}`}
+                  >
+                    {formatBenefitType(estimation.benefitType)}
                   </span>
                 </div>
-              )}
+
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign size={16} className="text-green-600" />
+                  <span className="font-medium">
+                    ${estimation.estimatedValue}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      estimation.status
+                    )}`}
+                  >
+                    {estimation.status}
+                  </span>
+                </div>
+
+                {estimation.createdAt && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar size={16} />
+                    <span>
+                      {new Date(estimation.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No benefit estimations found.
           </div>
-        ))}
+        )}
       </div>
 
       {/* Modal */}
@@ -273,7 +284,7 @@ export default function BenefitEstimationList() {
                   required
                 >
                   <option value={0}>Select Order</option>
-                  {orders?.data?.map((order) => (
+                  {orders?.map((order: Order) => (
                     <option key={order.id} value={order.id}>
                       Order #{order.id} - {order.customerName} ($
                       {order.totalAmount})

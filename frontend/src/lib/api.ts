@@ -2,11 +2,10 @@ import axios from "axios";
 
 // API base URLs for microservices
 const API_BASE_URLS = {
-  product: process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || "/api",
-  order: process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || "/api",
-  benefitEstimation:
-    process.env.NEXT_PUBLIC_BENEFIT_ESTIMATION_SERVICE_URL || "/api",
-  payout: process.env.NEXT_PUBLIC_PAYOUT_SERVICE_URL || "/api",
+  product: "/api",
+  order: "/api",
+  benefitEstimation: "/api",
+  payout: "/api",
 };
 
 // Create axios instances for each service
@@ -41,19 +40,23 @@ export interface Product {
 }
 
 export interface OrderItem {
+  id?: number;
   productId: number;
+  productName?: string;
   quantity: number;
-  price: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 export interface Order {
   id?: number;
   customerName: string;
   customerEmail: string;
-  items: OrderItem[];
+  orderItems: OrderItem[];
   totalAmount: number;
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  createdAt?: string;
+  orderDate?: string;
+  shippingAddress?: string;
 }
 
 export interface BenefitEstimation {

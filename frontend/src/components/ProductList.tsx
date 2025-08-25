@@ -20,13 +20,15 @@ export default function ProductList() {
 
   // Fetch products
   const {
-    data: products,
+    data: response,
     isLoading,
     error,
   } = useQuery({
     queryKey: ["products"],
     queryFn: productApiFunctions.getAllProducts,
   });
+
+  const products = response?.data?.data || [];
 
   // Create product mutation
   const createMutation = useMutation({
@@ -115,49 +117,57 @@ export default function ProductList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products?.data?.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white rounded-lg shadow-md p-6 border"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {product.name}
-              </h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(product)}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id!)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 size={16} />
-                </button>
+        {products && products.length > 0 ? (
+          products.map((product: Product) => (
+            <div
+              key={product.id}
+              className="bg-white rounded-lg shadow-md p-6 border"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {product.name}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id!)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-gray-600 text-sm mb-4">
+                {product.description}
+              </p>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign size={16} className="text-green-600" />
+                  <span className="font-medium">${product.price}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Package size={16} className="text-blue-600" />
+                  <span>Stock: {product.stockQuantity}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Hash size={16} className="text-purple-600" />
+                  <span className="capitalize">{product.category}</span>
+                </div>
               </div>
             </div>
-
-            <p className="text-gray-600 text-sm mb-4">{product.description}</p>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign size={16} className="text-green-600" />
-                <span className="font-medium">${product.price}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Package size={16} className="text-blue-600" />
-                <span>Stock: {product.stockQuantity}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Hash size={16} className="text-purple-600" />
-                <span className="capitalize">{product.category}</span>
-              </div>
-            </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No products found.
           </div>
-        ))}
+        )}
       </div>
 
       {/* Modal */}
@@ -281,5 +291,3 @@ export default function ProductList() {
     </div>
   );
 }
-
-
