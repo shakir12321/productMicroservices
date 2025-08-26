@@ -1,0 +1,73 @@
+config:
+  target: "http://host.docker.internal"
+  phases:
+    # Quick ramp-up
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp-up"
+
+    # Sustained load
+    - duration: 60
+      arrivalRate: 20
+      name: "Sustained load"
+
+    # Peak load
+    - duration: 30
+      arrivalRate: 20
+      rampTo: 30
+      name: "Peak load"
+
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  # Test Orders API (most important)
+  - name: "Orders API Load Test"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/orders/"
+          expect:
+            - statusCode: 200
+
+      - post:
+          url: "/api/orders/"
+          json:
+            customerName: "Load Test Customer"
+            customerEmail: "loadtest@example.com"
+            shippingAddress: "123 Load Test St"
+            orderItems:
+              - productId: 1
+                quantity: 1
+          expect:
+            - statusCode: [200, 201]
+
+  # Test Products API
+  - name: "Products API Load Test"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/products/"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/products/1"
+          expect:
+            - statusCode: 200
+
+  # Test Frontend Routes
+  - name: "Frontend Routes Load Test"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/orders/"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/api/products/"
+          expect:
+            - statusCode: 200
